@@ -52,14 +52,19 @@ class User extends Authenticatable implements JWTSubject
     }
 
         // Automatically append relational metadata payloads inside standard API JSON serialization sequences
-    protected $with = ['role'];
-
+    // protected $with = ['role'];
+    protected $appends = ['role_name'];
     /**
      * Define structural parent relationship context.
      */
     public function role(): BelongsTo
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(Role::class)->select(['id', 'name', 'slug']);
+    }
+
+    public function getRoleNameAttribute(): ?string
+    {
+        return $this->role?->name;
     }
 
     // Rest omitted for brevity

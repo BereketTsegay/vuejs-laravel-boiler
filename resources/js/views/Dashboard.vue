@@ -61,7 +61,7 @@ import { useAuthStore } from '../stores/auth';
 const authStore = useAuthStore();
 
 const firstName = computed(() => authStore.user?.name?.split(' ')[0] || 'there');
-const roleShort = computed(() => (authStore.user?.role || 'user').slice(0, 2).toUpperCase());
+const roleShort = computed(() => (authStore.user?.roleName || 'user').slice(0, 2).toUpperCase());
 const activity = [
   { title: 'Account session verified', detail: 'Your current session is protected and active.', time: 'Now', icon: 'OK', iconClass: 'bg-emerald-50 text-emerald-700' },
   { title: 'Workspace connected', detail: 'Your dashboard is connected to the application API.', time: 'Today', icon: 'IN', iconClass: 'bg-lime-50 text-lime-700' },
