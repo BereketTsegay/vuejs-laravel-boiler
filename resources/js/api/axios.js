@@ -43,8 +43,8 @@ api.interceptors.response.use(
             // 401: Unauthorized/Session Expired
             // 419: Laravel CSRF Token Mismatch (Session Timeout)
             if (status === 401 || status === 419) {
-                console.log(error.response.data);
-                // authStore.clearLocalAuth();
+
+                authStore.clearLocalAuth();
 
                 // Route back to login screen if not already there
                 if (router.currentRoute.value.name !== 'Login') {
