@@ -34,7 +34,7 @@ const routes = [
         path: 'admin',
         name: 'AdminDashboard',
         component: () => import('../views/admin/index.vue'),
-        meta: { requiresAdmin: true }
+        meta: { requiresRole: 'admin' }
       }
     ]
   },

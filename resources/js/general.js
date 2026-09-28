@@ -27,6 +27,14 @@ export default function initialize(router) {
         if (to.meta.guestOnly && authStore.isAuthenticated) {
 
             return '/dashboard';
+        }// Guard by Role
+        if (to.meta.requiresRole && !authStore.roles.includes(to.meta.requiresRole)) {
+            return next({ path: '/403' });
+        }
+
+        // Guard by Permission
+        if (to.meta.requiresPermission && !authStore.permissions.includes(to.meta.requiresPermission)) {
+            return next({ path: '/403' });
         }
 
   return;
