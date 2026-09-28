@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\RolePermissionController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\AuthController;
@@ -39,3 +40,15 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/admin/dashboard', [ApiController::class, 'adminDashboard']);
     });
 });
+
+// routes/api.php
+
+Route::middleware(['auth:api', 'role:admin'])->prefix('admin')->group(function () {
+    Route::get('/roles-permissions', [RolePermissionController::class, 'index']);
+    Route::post('/roles-permissions', [RolePermissionController::class, 'storeSchema']); // New
+    Route::get('/users/search', [RolePermissionController::class, 'searchUsers']); // New
+    Route::put('/roles/{role}/permissions', [RolePermissionController::class, 'updateRolePermissions']);
+    Route::put('/users/{user}/roles', [RolePermissionController::class, 'updateUserRoles']);
+});
+
+

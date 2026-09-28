@@ -60,4 +60,73 @@ api.interceptors.response.use(
     }
 );
 
+// Response Interceptors: Catch 401s and rotate the token
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+api.interceptors.response.use(
+  (response) => response, 
+  async (error) => {
+    const originalRequest = error.config;
+    const authStore = useAuthStore();
+
+    // Check if error is 401 and hasn't been retried yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      
+      // If we are already running a refresh token process, queue this request
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+        .then(token => {
+          originalRequest.headers.Authorization = 'Bearer ' + token;
+          return api(originalRequest);
+        })
+        .catch(err => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      return new Promise((resolve, reject) => {
+        // Request a fresh token from Laravel
+        axios.post('/api/auth/refresh', {}, {
+          headers: { Authorization: `Bearer ${authStore.token}` }
+        })
+        .then(({ data }) => {
+          // 1. This action saves and automatically re-decodes new Spatie claims!
+          authStore.saveToken(data.token); 
+          
+          // 2. Clear the queue with the new token
+          processQueue(null, data.token);
+          
+          // 3. Re-run original request
+          originalRequest.headers.Authorization = `Bearer ${data.token}`;
+          resolve(api(originalRequest));
+        })
+        .catch((err) => {
+          processQueue(err, null);
+          authStore.clearAuth(); // Token is completely dead, force logout
+          reject(err);
+        })
+        .finally(() => {
+          isRefreshing = false;
+        });
+      });
+    }
+
+    return Promise.reject(error);
+  });
+
 export default api;

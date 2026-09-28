@@ -6,6 +6,8 @@ export const useAuthStore = defineStore('auth', {
     state: () => ({
         user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null,
         token: localStorage.getItem('token') || null,
+         roles: localStorage.getItem('roles') ? JSON.parse(localStorage.getItem('roles')) : [],
+        permissions: localStorage.getItem('permissions') ? JSON.parse(localStorage.getItem('permissions')) : [],
         loading: false,
         initialized: false,
         apiErrors: null // Holds structured backend validation message arrays
@@ -38,7 +40,25 @@ export const useAuthStore = defineStore('auth', {
                 this.initialized = true;
             }
         },
+        saveToken(data) {
+            this.token = data.access_token;
+            localStorage.setItem('token', data.access_token);
+            
+            // Decode the JWT custom claims
+            try {
+                const decoded = jwtDecode(data.access_token);
+                this.user = data.user; // Or however you structured your user object
+                this.roles = data.user.roles.map((role) => role.name) || [];
+                this.permissions = data.user.roles[0]?.permissions.map((p) => p.name) || [];
 
+                localStorage.setItem('user', JSON.stringify(this.user));
+                localStorage.setItem('roles', JSON.stringify(this.roles));
+                localStorage.setItem('permissions', JSON.stringify(this.permissions));
+              
+            } catch (error) {
+                this.clearLocalAuth();
+            }
+        },
         /**
          * Process user authentications securely.
          */
@@ -54,8 +74,7 @@ export const useAuthStore = defineStore('auth', {
                  await api.post('api/login', credentials, { baseURL: '/' }).then((response) => {
                     // Store the access token in localStorage for subsequent API requests
                      this.user = response.data.user;
-                     localStorage.setItem('user', JSON.stringify(response.data.user));
-                     localStorage.setItem('token', response.data.access_token);
+                     this.saveToken(response.data);
                      setAuthorization(response.data.access_token);
                     return response;
                 });
@@ -86,8 +105,7 @@ export const useAuthStore = defineStore('auth', {
                 // await api.get('/sanctum/csrf-cookie', { baseURL: '/' });
                 await api.post('api/register', userData, { baseURL: '/' }).then((response) => {
                     this.user = response.data.user;
-                    localStorage.setItem('user', JSON.stringify(response.data.user));
-                    localStorage.setItem('token', response.data.access_token);
+                    this.saveToken(response.data);
                     setAuthorization(response.data.access_token);
                     return response;
                 });
@@ -122,8 +140,15 @@ export const useAuthStore = defineStore('auth', {
         clearLocalAuth() {
             this.user = null;
             this.apiErrors = null;
+            this.roles = [];
+            this.permissions = [];
+            this.token = null;
+            
             localStorage.removeItem('user');
             localStorage.removeItem('token');
+            localStorage.removeItem('roles');
+            localStorage.removeItem('permissions');
+          
         },
 
         /**
