@@ -69,13 +69,19 @@ const navItems = computed(() => {
     { name: 'Overview', path: '/dashboard', short: 'OV' },
     { name: 'Profile settings', path: '/profile', short: 'PR' }
   ];
-  if (authStore.isAdmin) items.push({ name: 'Admin center', path: '/admin', short: 'AD' });
+  if (authStore.isAdmin) items.push(
+    { name: 'Admin center', path: '/admin', short: 'AD' },
+    { name: 'Role and Permissions', path: '/admin/permissions', short: 'RP' },
+    { name: 'Role Management', path: '/admin/roles', short: 'RM' }
+  );
   return items;
 });
 
 const pageTitle = computed(() => {
   if (route.name === 'AdminDashboard') return 'Admin center';
   if (route.name === 'Profile') return 'Profile settings';
+  if (route.name === 'admin.permissions') return 'Role and Permissions';
+  if (route.name === 'admin.roles') return 'Role Management';
   return 'Overview';
 });
 

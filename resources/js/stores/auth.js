@@ -15,8 +15,8 @@ export const useAuthStore = defineStore('auth', {
 
     getters: {
         isAuthenticated: (state) => !!state.user,
-        isAdmin: (state) => state.user?.role === 'admin' || state.user?.role?.slug === 'admin',
-        roleName: (state) => state.user?.role && typeof state.user.role === 'object' ? state.user.role.name || 'Member' : state.user?.role || 'Member',
+        isAdmin: (state) => state.roles.includes('admin'),
+        roleName: (state) => state.roles[0] || 'Member',
 
         // Quick lookup helper for extracting inline field validation messages
         getFieldError: (state) => {
@@ -46,7 +46,7 @@ export const useAuthStore = defineStore('auth', {
             
             // Decode the JWT custom claims
             try {
-                const decoded = jwtDecode(data.access_token);
+                // const decoded = jwtDecode(data.access_token);
                 this.user = data.user; // Or however you structured your user object
                 this.roles = data.user.roles.map((role) => role.name) || [];
                 this.permissions = data.user.roles[0]?.permissions.map((p) => p.name) || [];
@@ -54,6 +54,7 @@ export const useAuthStore = defineStore('auth', {
                 localStorage.setItem('user', JSON.stringify(this.user));
                 localStorage.setItem('roles', JSON.stringify(this.roles));
                 localStorage.setItem('permissions', JSON.stringify(this.permissions));
+
               
             } catch (error) {
                 this.clearLocalAuth();
@@ -73,9 +74,8 @@ export const useAuthStore = defineStore('auth', {
                 // Fire authentication post request
                  await api.post('api/login', credentials, { baseURL: '/' }).then((response) => {
                     // Store the access token in localStorage for subsequent API requests
-                     this.user = response.data.user;
                      this.saveToken(response.data);
-                     setAuthorization(response.data.access_token);
+                    //  setAuthorization(response.data.access_token);
                     return response;
                 });
 
@@ -104,9 +104,9 @@ export const useAuthStore = defineStore('auth', {
             try {
                 // await api.get('/sanctum/csrf-cookie', { baseURL: '/' });
                 await api.post('api/register', userData, { baseURL: '/' }).then((response) => {
-                    this.user = response.data.user;
+                  
                     this.saveToken(response.data);
-                    setAuthorization(response.data.access_token);
+                    // setAuthorization(response.data.access_token);
                     return response;
                 });
                 return true;

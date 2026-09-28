@@ -85,6 +85,7 @@ const handleLogin = async () => {
   try {
     const success = await authStore.login(form);
     if (success) {
+      console.log('Login successful - 1');
       router.push({ name: 'Dashboard' });
     }
   } catch (error) {

@@ -36,7 +36,7 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
 
        // Admin-Only endpoints
-    Route::middleware(EnsureUserIsAdmin::class)->group(function () {
+    Route::middleware(['role:admin'])->group(function () {
         Route::get('/admin/dashboard', [ApiController::class, 'adminDashboard']);
     });
 });

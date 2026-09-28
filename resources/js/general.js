@@ -25,7 +25,7 @@ export default function initialize(router) {
 
         // Guard Clause 3: Redirect authenticated users away from landing/login pages
         if (to.meta.guestOnly && authStore.isAuthenticated) {
-
+            console.log('Redirecting authenticated user to dashboard - 3');
             return '/dashboard';
         }// Guard by Role
         if (to.meta.requiresRole && !authStore.roles.includes(to.meta.requiresRole)) {
@@ -47,7 +47,6 @@ export default function initialize(router) {
 }
 
 export function setAuthorization(token) {
-    console.log('Setting Authorization header with token:', token);
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`
 }
 

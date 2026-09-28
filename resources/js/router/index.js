@@ -35,7 +35,25 @@ const routes = [
         name: 'AdminDashboard',
         component: () => import('../views/admin/index.vue'),
         meta: { requiresRole: 'admin' }
-      }
+      },
+      {
+        path: '/admin/permissions',
+        name: 'admin.permissions',
+        // Lazy-load the dashboard view we built in the previous steps
+        component: () => import('../views/admin/PermissionDashboard.vue'), 
+        meta: { 
+          requiresRole: 'admin' // Only users with 'admin' in their JWT claims can enter
+        }
+      },
+      {
+        path: '/admin/roles',
+        name: 'admin.roles',
+        // Lazy-load the dashboard view we built in the previous steps
+        component: () => import('../views/admin/RoleManager.vue'), 
+        meta: { 
+          requiresRole: 'admin' // Only users with 'admin' in their JWT claims can enter
+        }
+      },
     ]
   },
   {
