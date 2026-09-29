@@ -98,7 +98,7 @@ public function storeSchema(Request $request)
  */
 public function searchUsers(Request $request)
 {
-    $search = $request->get('q');
+    $search = $request->input('q');
     
     $users = User::where('name', 'LIKE', "%{$search}%")
         ->orWhere('email', 'LIKE', "%{$search}%")

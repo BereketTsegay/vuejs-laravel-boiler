@@ -31,7 +31,7 @@
 
 <script setup>
 import { ref, reactive } from 'vue';
-import api from '../../api/axios';
+import api from '../api/axios';
 
 const emit = defineEmits(['schemaCreated']);
 
@@ -39,7 +39,12 @@ const form = reactive({ type: 'permission', name: '' });
 const submitting = ref(false);
 const feedback = ref(null);
 
+const kebabCaseRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 const handleSubmit = async () => {
+
+  console.log('Submitting form:', form);
+
   feedback.value = null;
   
   // Format string properties locally ahead of verification checks
@@ -76,13 +81,49 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-.creator-card { background: #fff; padding: 1.5rem; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 2rem; }
-.creator-form { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; }
-.form-group { display: flex; flex-direction: column; gap: 0.5rem; }
-input, select { padding: 0.6rem; border: 1px solid #d1d5db; border-radius: 6px; min-width: 220px; }
-.btn-primary { padding: 0.6rem 1.2rem; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; }
-.btn-primary:disabled { opacity: 0.6; }
-.feedback { margin-top: 1rem; font-size: 0.9rem; font-weight: 500; }
-.success { color: #16a34a; }
-.error { color: #dc2626; }
+.creator-card {
+  margin-bottom: 1.5rem;
+  padding: clamp(1.1rem, 2.5vw, 1.6rem);
+  border: 1px solid #e1e7e2;
+  border-radius: 8px;
+  background: linear-gradient(115deg, #f3f7f3 0%, #fff 65%);
+}
+.creator-card h3 { margin: 0 0 1.2rem; color: #202b27; font-size: 1.05rem; font-weight: 650; }
+.creator-form { display: grid; grid-template-columns: minmax(180px, 0.8fr) minmax(220px, 1.4fr) auto; gap: 1rem; align-items: end; }
+.form-group { display: flex; min-width: 0; flex-direction: column; gap: 0.45rem; }
+.form-group label { color: #58655e; font-size: 0.75rem; font-weight: 700; }
+.creator-form input, .creator-form select {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid #d4ddd6;
+  border-radius: 5px;
+  background: #fff;
+  color: #202b27;
+  font: inherit;
+  font-size: 0.875rem;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.creator-form input:focus, .creator-form select:focus { border-color: #176b4b; outline: 0; box-shadow: 0 0 0 3px rgb(23 107 75 / 12%); }
+.btn-primary {
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid #176b4b;
+  border-radius: 5px;
+  background: #176b4b;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+.btn-primary:hover:not(:disabled) { background: #10563b; }
+.btn-primary:active:not(:disabled) { transform: translateY(1px); }
+.btn-primary:disabled { opacity: 0.6; cursor: wait; }
+.feedback { margin: 1rem 0 0; padding: 0.75rem 0.9rem; border: 1px solid; border-radius: 5px; font-size: 0.85rem; font-weight: 550; }
+.success { border-color: #bbddc9; background: #eff8f1; color: #17623f; }
+.error { border-color: #f0c5bd; background: #fff2ef; color: #a83f2c; }
+@media (max-width: 720px) { .creator-form { grid-template-columns: 1fr; } .btn-primary { justify-self: start; } }
 </style>

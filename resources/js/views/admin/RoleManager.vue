@@ -106,16 +106,31 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.role-manager-container { padding: 2rem; max-width: 1200px; margin: 0 auto; font-family: system-ui, sans-serif; }
-.subtitle { color: #666; margin-bottom: 2rem; }
-.loading-state { padding: 2rem; text-align: center; color: #888; }
-.error-banner { background: #fee2e2; color: #b91c1c; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
-.table-wrapper { overflow-x: auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-.matrix-table { width: 100%; border-collapse: collapse; text-align: left; }
-.matrix-table th, .matrix-table td { padding: 1rem; border-bottom: 1px solid #e5e7eb; }
-.matrix-table th { background: #f9fafb; font-weight: 600; text-transform: capitalize; color: #374151; }
+.role-manager-container {
+  --access-ink: #202b27;
+  --access-muted: #68736d;
+  --access-line: #e1e7e2;
+  --access-green: #176b4b;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 4vw, 3.5rem);
+  color: var(--access-ink);
+  font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+}
+.role-manager-container h2 { margin: 0; font-size: clamp(1.55rem, 3vw, 2.1rem); line-height: 1.15; font-weight: 650; }
+.subtitle { margin: 0.7rem 0 1.75rem; color: var(--access-muted); font-size: 0.9rem; }
+.loading-state { padding: 2rem; border: 1px solid var(--access-line); border-radius: 8px; background: #f3f7f3; color: var(--access-muted); text-align: center; }
+.error-banner { margin-bottom: 1.5rem; padding: 0.9rem 1rem; border: 1px solid #f0c5bd; border-radius: 6px; background: #fff2ef; color: #a83f2c; font-size: 0.875rem; }
+.table-wrapper { overflow: auto; border: 1px solid var(--access-line); border-radius: 8px; background: #fff; box-shadow: 0 8px 24px rgb(32 43 39 / 4%); }
+.matrix-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; }
+.matrix-table th, .matrix-table td { padding: 0.95rem 1.1rem; border-bottom: 1px solid var(--access-line); }
+.matrix-table th { position: sticky; top: 0; background: #f3f7f3; color: var(--access-muted); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; }
+.matrix-table tbody tr:last-child td { border-bottom: 0; }
+.matrix-table tbody tr:hover { background: #f8faf8; }
 .text-center { text-align: center; }
-.font-medium { font-weight: 500; color: #111827; }
-input[type="checkbox"] { width: 1.2rem; height: 1.2rem; cursor: pointer; accent-color: #2563eb; }
-input[type="checkbox"]:disabled { opacity: 0.5; cursor: not-allowed; }
+.font-medium { color: var(--access-ink); font-weight: 600; }
+input[type="checkbox"] { width: 1.1rem; height: 1.1rem; cursor: pointer; accent-color: var(--access-green); vertical-align: middle; }
+input[type="checkbox"]:focus-visible { outline: 3px solid rgb(23 107 75 / 24%); outline-offset: 2px; }
+input[type="checkbox"]:disabled { opacity: 0.5; cursor: wait; }
+@media (max-width: 700px) { .matrix-table th, .matrix-table td { padding: 0.8rem; } }
 </style>

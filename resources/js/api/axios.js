@@ -101,7 +101,7 @@ api.interceptors.response.use(
 
       return new Promise((resolve, reject) => {
         // Request a fresh token from Laravel
-        axios.post('/api/auth/refresh', {}, {
+        axios.post('/api/refresh', {}, {
           headers: { Authorization: `Bearer ${authStore.token}` }
         })
         .then(({ data }) => {
