@@ -39,9 +39,9 @@ const tools = [
 onMounted(async () => {
   try {
     const { data } = await api.get('/admin/dashboard');
-    adminStats.totalUsers = data.total_users ?? '--';
-    adminStats.systemStatus = data.system_status || 'Operational';
-    adminStats.environment = data.environment || 'Unknown';
+    adminStats.totalUsers = data.metrics.total_users ?? '--';
+    adminStats.systemStatus = data.metrics.system_status || 'Operational';
+    adminStats.environment = data.metrics.environment || 'Unknown';
   } catch {}
 });
 </script>

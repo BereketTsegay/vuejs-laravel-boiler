@@ -78,7 +78,7 @@ const togglePermission = async (role, permissionName) => {
     currentPermissions.push(permissionName);
   }
   try {
-    const response = await api.put(`/api/admin/roles/${role.id}/permissions`, { permissions: currentPermissions });
+    const response = await api.put(`/admin/roles/${role.id}/permissions`, { permissions: currentPermissions });
     const idx = roles.value.findIndex(r => r.id === role.id);
     roles.value[idx] = response.data.role;
   } catch (err) {

@@ -39,7 +39,12 @@ const form = reactive({ type: 'permission', name: '' });
 const submitting = ref(false);
 const feedback = ref(null);
 
+const kebabCaseRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 const handleSubmit = async () => {
+
+  console.log('Submitting form:', form);
+
   feedback.value = null;
   
   // Format string properties locally ahead of verification checks
@@ -56,7 +61,7 @@ const handleSubmit = async () => {
 
   submitting.value = true;
   try {
-    await api.post('/api/admin/roles-permissions', {
+    await api.post('/admin/roles-permissions', {
       type: form.type,
       name: sanitizedName
     });
