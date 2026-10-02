@@ -2,181 +2,145 @@
 <template>
   <div class="dashboard-wrapper">
     <div class="header-section">
-      <h1>Access Control Center</h1>
+      <h1>Enterprise Core Workspace</h1>
       <div class="tabs">
-        <button :class="{ active: currentTab === 'matrix' }" @click="currentTab = 'matrix'">Matrix Manager</button>
-        <button :class="{ active: currentTab === 'users' }" @click="currentTab = 'users'">User Roles Assignment</button>
+        <button :class="{ active: currentTab === 'matrix' }" @click="currentTab = 'matrix'">Security Matrix</button>
+        <button :class="{ active: currentTab === 'users' }" @click="currentTab = 'users'">User Management</button>
+        <button :class="{ active: currentTab === 'logs' }" @click="currentTab = 'logs'">Activity Logs</button>
       </div>
     </div>
 
-    <!-- Active Tab Panel Contexts -->
+    <!-- SIDE PANEL COMPONENT: FREQUENTLY VISITED PAGES (Rendered globally across panels) -->
+    <div class="frequent-pages-banner">
+      <strong>⚡ Quick Links (Most Visited Pages):</strong>
+      <span v-for="page in trackerStore.frequentlyVisited" :key="page.name" class="visit-badge">
+        {{ page.name }} ({{ page.count }})
+      </span>
+    </div>
+
+    <!-- TAB 1: SECURITY MATRIX -->
     <div v-if="currentTab === 'matrix'">
-      <!-- Dynamic Creation Component Embedded -->
       <SchemaCreator @schemaCreated="fetchMatrixData" />
-      
-      <!-- Table View from Previous Step -->
-      <div class="table-wrapper">
-        <table class="matrix-table">
-          <thead>
-            <tr>
-              <th>Permissions</th>
-              <th v-for="role in roles" :key="role.id" class="text-center">{{ role.name.toUpperCase() }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="permission in permissions" :key="permission">
-              <td class="font-medium">{{ permission }}</td>
-              <td v-for="role in roles" :key="role.id" class="text-center">
-                <input 
-                  type="checkbox" 
-                  :checked="hasPermission(role, permission)"
-                  @change="togglePermission(role, permission)"
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <UserRoleAssigner :availableRoles="roles" />
     </div>
 
-    <div v-if="currentTab === 'users'">
-      <!-- User Assignment Component Embedded passing fetched available role lists -->
-      <UserRoleAssigner :availableRoles="roles" />
+    <!-- TAB 2: USER MANAGEMENT CRUD -->
+    <div v-if="currentTab === 'users'" class="panel-card">
+      <h3>System User Accounts</h3>
+      <form @submit.prevent="createUser" class="inline-user-form">
+        <input v-model="userForm.name" type="text" placeholder="Full Name" required />
+        <input v-model="userForm.email" type="email" placeholder="Email Address" required />
+        <input v-model="userForm.password" type="password" placeholder="Password (min 8)" required />
+        <button type="submit" class="btn-primary">Add User</button>
+      </form>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Active Roles</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="u in usersList" :key="u.id">
+            <td>{{ u.name }}</td>
+            <td>{{ u.email }}</td>
+            <td>
+              <span v-for="r in u.roles" :key="r.name" class="role-pill">{{ r.name }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TAB 3: SPATIE SYSTEM ACTIVITY LOGS -->
+    <div v-if="currentTab === 'logs'" class="panel-card">
+      <h3>System Operations & Audit Trail</h3>
+      <button @click="fetchLogs" class="btn-secondary">🔄 Refresh Logs</button>
+
+      <div class="logs-timeline">
+        <div v-for="log in activityLogs" :key="log.id" class="log-item">
+          <span class="log-time">[{{ formatTime(log.created_at) }}]</span>
+          <strong class="log-actor">{{ log.causer }}</strong>:
+          <span class="log-desc">{{ log.description }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import api from '../../api/axios';
+import { usePageTrackerStore } from '../../stores/pageTracker';
 import SchemaCreator from '../../componets/SchemaCreator.vue';
 import UserRoleAssigner from '../../componets/UserRoleAssigner.vue';
 
 const currentTab = ref('matrix');
+const trackerStore = usePageTrackerStore();
+
+// System States
 const roles = ref([]);
-const permissions = ref([]);
+const usersList = ref([]);
+const activityLogs = ref([]);
+
+const userForm = reactive({ name: '', email: '', password: '' });
 
 const fetchMatrixData = async () => {
+  const response = await api.get('/admin/roles-permissions');
+  roles.value = response.data.roles;
+};
+
+const fetchUsers = async () => {
+  const response = await api.get('/admin/users');
+  usersList.value = response.data.data;
+};
+
+const createUser = async () => {
   try {
-    const response = await api.get('/admin/roles-permissions');
-    roles.value = response.data.roles;
-    permissions.value = response.data.permissions;
+    await api.post('/admin/users', userForm);
+    alert('User provisioned successfully.');
+    fetchUsers();
+    userForm.name = ''; userForm.email = ''; userForm.password = '';
   } catch (err) {
-    console.error('Failed fetching security matrix datasets.', err);
+    alert(err.response?.data?.message || 'Error parsing user schema rules.');
   }
 };
 
-const hasPermission = (role, permissionName) => {
-  return role.permissions.some(p => p.name === permissionName);
+const fetchLogs = async () => {
+  const response = await api.get('/admin/activity-logs');
+  activityLogs.value = response.data;
 };
 
-const togglePermission = async (role, permissionName) => {
-  let currentPermissions = role.permissions.map(p => p.name);
-  if (currentPermissions.includes(permissionName)) {
-    currentPermissions = currentPermissions.filter(p => p !== permissionName);
-  } else {
-    currentPermissions.push(permissionName);
-  }
-  try {
-    const response = await api.put(`/admin/roles/${role.id}/permissions`, { permissions: currentPermissions });
-    const idx = roles.value.findIndex(r => r.id === role.id);
-    roles.value[idx] = response.data.role;
-  } catch (err) {
-    alert('Synchronization connection issue.');
-  }
+const formatTime = (isoString) => {
+  return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 };
 
-onMounted(() => fetchMatrixData());
+onMounted(() => {
+  fetchMatrixData();
+  fetchUsers();
+  fetchLogs();
+});
 </script>
 
 <style scoped>
-.dashboard-wrapper {
-  --access-ink: #202b27;
-  --access-muted: #68736d;
-  --access-line: #e1e7e2;
-  --access-green: #176b4b;
-  --access-wash: #f3f7f3;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: clamp(1.25rem, 4vw, 3.5rem);
-  color: var(--access-ink);
-  font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-}
-.header-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--access-line);
-}
-.header-section h1 {
-  margin: 0;
-  font-size: clamp(1.7rem, 3vw, 2.35rem);
-  line-height: 1.1;
-  font-weight: 650;
-  letter-spacing: 0;
-}
-.tabs {
-  display: flex;
-  gap: 0.25rem;
-  padding: 0.3rem;
-  border: 1px solid var(--access-line);
-  border-radius: 8px;
-  background: #edf1ed;
-}
-.tabs button {
-  min-height: 2.5rem;
-  padding: 0.55rem 0.9rem;
-  border: 1px solid transparent;
-  border-radius: 5px;
-  background: transparent;
-  color: var(--access-muted);
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 600;
-  transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
-}
-.tabs button:hover { color: var(--access-ink); }
-.tabs button.active {
-  border-color: var(--access-line);
-  background: #fff;
-  color: var(--access-green);
-  box-shadow: 0 1px 2px rgb(32 43 39 / 8%);
-}
-.tabs button:focus-visible, input[type="checkbox"]:focus-visible {
-  outline: 3px solid rgb(23 107 75 / 24%);
-  outline-offset: 2px;
-}
-.table-wrapper {
-  overflow: auto;
-  border: 1px solid var(--access-line);
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgb(32 43 39 / 4%);
-}
-.matrix-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; }
-.matrix-table th, .matrix-table td { padding: 0.95rem 1.1rem; border-bottom: 1px solid var(--access-line); }
-.matrix-table th {
-  position: sticky;
-  top: 0;
-  background: var(--access-wash);
-  color: var(--access-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
-.matrix-table tbody tr:last-child td { border-bottom: 0; }
-.matrix-table tbody tr:hover { background: #f8faf8; }
-.text-center { text-align: center; }
-.font-medium { font-weight: 600; }
-input[type="checkbox"] { width: 1.1rem; height: 1.1rem; cursor: pointer; accent-color: var(--access-green); vertical-align: middle; }
-@media (max-width: 700px) {
-  .header-section { align-items: stretch; flex-direction: column; }
-  .tabs { align-self: flex-start; max-width: 100%; }
-  .tabs button { padding-inline: 0.65rem; font-size: 0.8rem; }
-  .matrix-table th, .matrix-table td { padding: 0.8rem; }
-}
+.dashboard-wrapper { padding: 2rem; max-width: 1200px; margin: 0 auto; font-family: system-ui, sans-serif; }
+.header-section { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+.tabs button { padding: 0.6rem 1.2rem; background: #e5e7eb; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; margin-right: 0.5rem; }
+.tabs button.active { background: #2563eb; color: white; }
+.frequent-pages-banner { background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 2rem; font-size: 0.9rem; }
+.visit-badge { background: #2563eb; color: white; padding: 0.2rem 0.6rem; border-radius: 12px; margin-left: 0.5rem; font-size: 0.8rem; }
+.panel-card { background: white; padding: 1.5rem; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 2rem; }
+.inline-user-form { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+.inline-user-form input { padding: 0.6rem; border: 1px solid #d1d5db; border-radius: 6px; flex: 1; }
+.data-table { width: 100%; border-collapse: collapse; text-align: left; }
+.data-table th, .data-table td { padding: 0.75rem; border-bottom: 1px solid #e5e7eb; }
+.role-pill { background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; border: 1px solid #e5e7eb; }
+.logs-timeline { background: #1e293b; color: #f8fafc; padding: 1.5rem; border-radius: 6px; font-family: monospace; max-height: 400px; overflow-y: auto; margin-top: 1rem; }
+.log-item { margin-bottom: 0.5rem; border-bottom: 1px solid #334155; padding-bottom: 0.25rem; font-size: 0.9rem; }
+.log-time { color: #38bdf8; margin-right: 0.5rem; }
+.log-actor { color: #4ade80; }
+.btn-primary { background: #2563eb; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; }
+.btn-secondary { background: #4b5563; color: white; border: none; padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer; }
 </style>

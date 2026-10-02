@@ -13,6 +13,8 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Spatie\Permission\Traits\HasRoles;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\LogOptions; //
 
 /**
  * @property int $id
@@ -29,7 +31,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, Notifiable, HasRoles,LogsActivity;
 
     /**
      * Get the attributes that should be cast.
@@ -66,6 +68,14 @@ class User extends Authenticatable implements JWTSubject
     public function getRoleNameAttribute(): ?string
     {
         return $this->role?->name;
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'email']) // Log changes to these fields
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 
     // Rest omitted for brevity

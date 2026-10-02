@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\RolePermissionController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ApiController;
@@ -49,6 +50,11 @@ Route::middleware(['auth:api', 'role:admin'])->prefix('admin')->group(function (
     Route::get('/users/search', [RolePermissionController::class, 'searchUsers']); // New
     Route::put('/roles/{role}/permissions', [RolePermissionController::class, 'updateRolePermissions']);
     Route::put('/users/{user}/roles', [RolePermissionController::class, 'updateUserRoles']);
+
+    //dash board
+    Route::get('/users', [AdminDashboardController::class, 'usersIndex']);
+    Route::post('/users', [AdminDashboardController::class, 'userStore']);
+    Route::get('/activity-logs', [AdminDashboardController::class, 'activityIndex']);
 });
 
 

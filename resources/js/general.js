@@ -1,5 +1,6 @@
 import { useAuthStore } from './stores/auth';
 import axios from 'axios';
+import { usePageTrackerStore } from './stores/pageTracker';
 
 
 export default function initialize(router) {
@@ -38,8 +39,13 @@ export default function initialize(router) {
         }
 
   return;
-});
+    });
 
+    router.afterEach((to) => {
+        const tracker = usePageTrackerStore();
+        // Uses the route metadata title or path name to log visits cleanly
+        tracker.trackVisit(to.meta.title || to.name || to.path);
+    });
 
     if (authStore.isAuthenticated && authStore.user?.token) {
         setAuthorization(authStore.user.token);
